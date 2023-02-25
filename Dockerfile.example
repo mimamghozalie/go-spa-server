@@ -1,0 +1,26 @@
+# Menggunakan image golang:alpine sebagai base image
+FROM golang:alpine AS build
+
+# Menyalin source code ke dalam container
+COPY . /app
+
+# Menetapkan working directory ke direktori aplikasi
+WORKDIR /app
+
+# Menginstall dependencies (opsional)
+RUN go mod download
+
+# Mem-build aplikasi
+RUN go build -o app
+
+# Menggunakan image scratch sebagai base image untuk image produksi
+FROM scratch
+ENV GIN_MODE=release
+# Menyalin binary dari container build sebelumnya ke dalam image produksi
+COPY --from=build /app/app /
+COPY --from=build /app/static /static
+
+EXPOSE 8080
+
+# Menetapkan command default yang akan dijalankan ketika container berjalan
+CMD ["/app"]
